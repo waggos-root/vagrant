@@ -1,0 +1,33 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.box = "roboxes/rocky9"  
+  config.vm.hostname = "mysql_multi"
+
+  config.vm.network "forwarded_port", guest: 3306, host: 3306
+  config.vm.network "forwarded_port", guest: 3307, host: 3307
+  config.vm.network "forwarded_port", guest: 3308, host: 3308
+  
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+	vb.cpus = 2
+  end  
+  
+  config.vm.provision "file", source: "./etc/my.cnf", destination: "/tmp/my.cnf"
+  config.vm.provision "file", source: "./etc/mysql_selinux.te", destination: "/tmp/mysql_selinux.te"
+  #
+  config.vm.provision "shell", privileged: true, path: "./seLinux.sh"  
+  config.vm.provision "shell", privileged: true, path: "./install-mysql.sh"
+  config.vm.provision "shell", privileged: true, path: "./config-mysql.sh"
+  #
+  config.vm.provision "shell", privileged: true, inline: <<-FIREWALL
+    echo "Add ports 3306, 3307 and 3308 to FirewallD"
+    firewall-cmd --add-port={3306/tcp,3307/tcp,3308/tcp} --permanent
+	firewall-cmd --reload
+  FIREWALL
+end

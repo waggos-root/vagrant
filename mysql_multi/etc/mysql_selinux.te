@@ -1,0 +1,16 @@
+
+module mysql_policy 1.0;
+
+require {
+        type mysqld_t;
+        type usr_t;
+        class dir { add_name remove_name write };
+        class file { create rename unlink write };
+}
+
+#============= mysqld_t ==============
+
+allow mysqld_t usr_t:dir { add_name remove_name write };
+
+allow mysqld_t usr_t:file { create unlink write };
+allow mysqld_t usr_t:file rename;
